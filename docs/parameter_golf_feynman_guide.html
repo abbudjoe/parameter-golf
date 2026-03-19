@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Understanding Parameter Golf — A Feynman-Style Guide</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #131a2f;
+      --panel-2: #18213c;
+      --text: #e9eefc;
+      --muted: #a8b3d1;
+      --accent: #7dd3fc;
+      --accent-2: #c084fc;
+      --good: #86efac;
+      --warn: #fcd34d;
+      --border: #2a355d;
+      --code: #0f1730;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+      --radius: 18px;
+      --max: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(125, 211, 252, 0.12), transparent 22%),
+        radial-gradient(circle at top left, rgba(192, 132, 252, 0.10), transparent 26%),
+        linear-gradient(180deg, #09101d 0%, #0b1020 100%);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .wrap {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 28px 20px 80px;
+    }
+
+    .hero {
+      background: linear-gradient(145deg, rgba(19, 26, 47, 0.95), rgba(24, 33, 60, 0.95));
+      border: 1px solid rgba(125, 211, 252, 0.15);
+      border-radius: 28px;
+      padding: 38px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -120px -120px auto;
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(125, 211, 252, 0.18), transparent 68%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 14px;
+    }
+
+    h1, h2, h3 {
+      line-height: 1.15;
+      margin: 0 0 14px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      max-width: 11ch;
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 2.6vw, 2.2rem);
+      margin-top: 44px;
+    }
+
+    h3 {
+      font-size: 1.15rem;
+      color: #f7f9ff;
+      margin-top: 0;
+    }
+
+    .lead {
+      font-size: 1.12rem;
+      color: var(--muted);
+      max-width: 72ch;
+    }
+
+    .top-grid,
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+      display: grid;
+      gap: 18px;
+    }
+
+    .top-grid { grid-template-columns: 1.4fr 0.95fr; margin-top: 26px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .card,
+    .callout,
+    .step,
+    .glossary-item,
+    .faq,
+    .summary-box {
+      background: linear-gradient(180deg, rgba(19, 26, 47, 0.95), rgba(16, 23, 48, 0.97));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .metric .value {
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    .toc {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .toc a {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    .section-intro {
+      max-width: 75ch;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(125, 211, 252, 0.12);
+      color: var(--accent);
+      font-size: 0.82rem;
+      margin-bottom: 10px;
+    }
+
+    .diagram {
+      margin-top: 18px;
+      background: linear-gradient(180deg, rgba(15, 23, 48, 0.95), rgba(10, 16, 31, 0.96));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 18px;
+      overflow-x: auto;
+      box-shadow: var(--shadow);
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    ul, ol {
+      padding-left: 1.25rem;
+    }
+
+    li + li {
+      margin-top: 0.4rem;
+    }
+
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    code {
+      background: var(--code);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 0.15rem 0.4rem;
+      font-size: 0.95em;
+    }
+
+    pre {
+      margin: 0;
+      background: var(--code);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      overflow-x: auto;
+      color: #dbe8ff;
+    }
+
+    .step-number {
+      width: 34px;
+      height: 34px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 50%;
+      background: linear-gradient(180deg, var(--accent), #38bdf8);
+      color: #04111e;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .glossary-item dt {
+      font-weight: 800;
+      color: #fff;
+      font-size: 1.02rem;
+      margin-bottom: 6px;
+    }
+
+    .glossary-item dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .teach {
+      border-left: 4px solid var(--accent-2);
+      padding-left: 16px;
+      color: #e7ddff;
+    }
+
+    .compare {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .compare th,
+    .compare td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      vertical-align: top;
+    }
+
+    .compare th {
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+    }
+
+    .compare td {
+      color: var(--muted);
+    }
+
+    details {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.025);
+      padding: 12px 14px;
+    }
+
+    details + details {
+      margin-top: 10px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .footer-note {
+      margin-top: 44px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .top-grid,
+      .grid-2,
+      .grid-3,
+      .grid-4 {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 28px 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Parameter Golf • Feynman-style guide • visual model + glossary + walkthrough</div>
+      <h1>Understanding Parameter Golf</h1>
+      <p class="lead">
+        This page explains parameter golf in plain language you can learn from, reason about, and teach to someone else.
+        It combines three things in one place: a <strong>visual mental model</strong>, a <strong>glossary of key terms</strong>,
+        and a <strong>step-by-step walkthrough</strong> of a real training-and-compression loop.
+      </p>
+
+      <div class="top-grid">
+        <div class="card">
+          <span class="pill">One-sentence summary</span>
+          <p>
+            <strong>Parameter golf is the art of making a tiny language model unusually good at compressing and predicting text under strict limits on size and training time.</strong>
+          </p>
+          <div class="toc">
+            <a href="#visual-model">Visual mental model</a>
+            <a href="#glossary">Glossary</a>
+            <a href="#walkthrough">Walkthrough</a>
+            <a href="#how-to-teach">How to teach it</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <span class="pill">Competition lens</span>
+          <div class="grid-2">
+            <div class="metric">
+              <div class="label">Goal</div>
+              <div class="value">Lower BPB</div>
+            </div>
+            <div class="metric">
+              <div class="label">Hard cap</div>
+              <div class="value">16 MB artifact</div>
+            </div>
+            <div class="metric">
+              <div class="label">Training budget</div>
+              <div class="value">10 minutes</div>
+            </div>
+            <div class="metric">
+              <div class="label">Mindset</div>
+              <div class="value">Efficiency, not scale</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="visual-model">
+      <h2>1. Visual mental model</h2>
+      <p class="section-intro">
+        The cleanest way to understand the contest is this: a language model is a <strong>text prediction machine</strong>, and good text prediction is closely related to <strong>good compression</strong>.
+        Parameter golf asks: <em>how much prediction power can you squeeze into a tiny, cheap-to-train package?</em>
+      </p>
+
+      <div class="grid-3">
+        <div class="card">
+          <span class="pill">Mental model A</span>
+          <h3>A model is a compressor</h3>
+          <p>
+            If the model can guess the next token well, it needs fewer bits to describe the text. That is why the competition score is <strong>bits per byte (BPB)</strong>.
+          </p>
+        </div>
+        <div class="card">
+          <span class="pill">Mental model B</span>
+          <h3>Parameters are memory</h3>
+          <p>
+            The model's weights are its learned memory. More weights usually help, but here storage is capped, so every weight must earn its keep.
+          </p>
+        </div>
+        <div class="card">
+          <span class="pill">Mental model C</span>
+          <h3>Training is tuning</h3>
+          <p>
+            We are not hunting for one magical trick. We are building a loop: propose an idea, train, measure, compare, keep the good ones.
+          </p>
+        </div>
+      </div>
+
+      <div class="diagram">
+        <svg viewBox="0 0 1200 440" role="img" aria-label="Diagram of parameter golf as a loop from text to training to compression to evaluation">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#7dd3fc" />
+              <stop offset="100%" stop-color="#c084fc" />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="1200" height="440" rx="28" fill="#0c1428" />
+
+          <rect x="40" y="72" width="180" height="96" rx="18" fill="#131f3d" stroke="#2a355d" />
+          <text x="130" y="112" fill="#ffffff" font-size="24" text-anchor="middle" font-weight="700">Text Data</text>
+          <text x="130" y="142" fill="#a8b3d1" font-size="16" text-anchor="middle">books, web, code, etc.</text>
+
+          <rect x="290" y="72" width="220" height="96" rx="18" fill="#131f3d" stroke="#2a355d" />
+          <text x="400" y="112" fill="#ffffff" font-size="24" text-anchor="middle" font-weight="700">Tiny Model</text>
+          <text x="400" y="142" fill="#a8b3d1" font-size="16" text-anchor="middle">transformer learns patterns</text>
+
+          <rect x="580" y="72" width="240" height="96" rx="18" fill="#131f3d" stroke="#2a355d" />
+          <text x="700" y="112" fill="#ffffff" font-size="24" text-anchor="middle" font-weight="700">Train + Validate</text>
+          <text x="700" y="142" fill="#a8b3d1" font-size="16" text-anchor="middle">measure loss and BPB</text>
+
+          <rect x="890" y="72" width="250" height="96" rx="18" fill="#131f3d" stroke="#2a355d" />
+          <text x="1015" y="112" fill="#ffffff" font-size="24" text-anchor="middle" font-weight="700">Quantize + Pack</text>
+          <text x="1015" y="142" fill="#a8b3d1" font-size="16" text-anchor="middle">fit under the size cap</text>
+
+          <path d="M220 120 H290" stroke="url(#g1)" stroke-width="8" stroke-linecap="round" />
+          <path d="M510 120 H580" stroke="url(#g1)" stroke-width="8" stroke-linecap="round" />
+          <path d="M820 120 H890" stroke="url(#g1)" stroke-width="8" stroke-linecap="round" />
+
+          <rect x="260" y="252" width="680" height="120" rx="24" fill="#111b34" stroke="#2a355d" />
+          <text x="600" y="292" fill="#ffffff" font-size="28" text-anchor="middle" font-weight="800">Optimization loop</text>
+          <text x="600" y="327" fill="#a8b3d1" font-size="20" text-anchor="middle">Idea → code change → train → evaluate → compare → keep or discard</text>
+
+          <path d="M1015 168 C1015 230 920 230 890 230 L360 230 C310 230 270 240 270 252" fill="none" stroke="#86efac" stroke-width="7" stroke-linecap="round" />
+          <text x="1015" y="214" fill="#86efac" font-size="16" text-anchor="middle">did compression hurt too much?</text>
+
+          <text x="600" y="406" fill="#fcd34d" font-size="18" text-anchor="middle">Winning is not about biggest model. It is about best tradeoff between learning ability, storage efficiency, and training speed.</text>
+        </svg>
+      </div>
+
+      <div class="grid-2" style="margin-top: 18px;">
+        <div class="callout">
+          <span class="pill">Why the Mac mini matters</span>
+          <h3>Local runs are a wind tunnel</h3>
+          <p>
+            Our local MLX setup is not the final contest environment. It is a cheap screening loop. We use it to reject bad ideas fast and only promote promising ones to expensive cloud runs later.
+          </p>
+        </div>
+        <div class="callout">
+          <span class="pill">Why quantization matters</span>
+          <h3>The shipped model is the scored model</h3>
+          <p>
+            In this contest, the stored artifact matters. A model that looks great in float precision but falls apart after int8 compression can still lose.
+          </p>
+        </div>
+      </div>
+
+      <div class="summary-box" style="margin-top: 18px;">
+        <span class="pill">A simple analogy</span>
+        <p class="teach">
+          Imagine building a race car with strict rules: tiny fuel tank, strict weight limit, and a short race. You do not win by adding more engine. You win by getting every part to work together efficiently. That is parameter golf.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <h2>The three tensions that define the game</h2>
+      <p class="section-intro">
+        Every design choice is a tradeoff across three pressures. Good parameter golf work means learning to see these pressures clearly.
+      </p>
+      <div class="grid-3">
+        <div class="card">
+          <span class="pill">Pressure 1</span>
+          <h3>Learning ability</h3>
+          <p>
+            The model needs enough capacity to learn useful text patterns. Wider layers, more layers, better tokenization, and better training all push in this direction.
+          </p>
+        </div>
+        <div class="card">
+          <span class="pill">Pressure 2</span>
+          <h3>Storage efficiency</h3>
+          <p>
+            The final artifact must fit under the byte cap. Quantization, weight tying, and compact serialization all help here.
+          </p>
+        </div>
+        <div class="card">
+          <span class="pill">Pressure 3</span>
+          <h3>Training speed</h3>
+          <p>
+            The model only gets a short training window. Slow ideas that need many extra steps may not matter if they cannot pay off before the wall-clock cap ends.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="glossary">
+      <h2>2. Glossary of key terms</h2>
+      <p class="section-intro">
+        The goal here is not textbook-perfect wording. It is to make each term intuitive enough that you can explain it to someone else without hiding behind jargon.
+      </p>
+
+      <div class="grid-2">
+        <dl class="glossary-item">
+          <dt>Artifact</dt>
+          <dd>The final file you submit: model weights plus any code or metadata needed to use them. The contest size cap applies to this shipped package.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Attention</dt>
+          <dd>The mechanism that lets a transformer decide which earlier tokens matter most when predicting the next token.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Baseline</dt>
+          <dd>The starting model or recipe you compare new ideas against. You need a baseline so you know whether a change helped or hurt.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Bits per byte (BPB)</dt>
+          <dd>A compression-style score. Lower is better. If the model predicts text well, it needs fewer bits on average to explain each byte.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Embedding</dt>
+          <dd>A learned table that turns discrete tokens into vectors of numbers the network can process.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Eval-time compute</dt>
+          <dd>Extra computation allowed during evaluation. In this contest, that can create room for clever tricks beyond ordinary training.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Gradient</dt>
+          <dd>A signal telling each parameter which direction would reduce the model's error.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Harness</dt>
+          <dd>The repeatable experiment wrapper around the model: commands, logging, summary outputs, and result collection.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Head / KV head</dt>
+          <dd>One attention sub-channel. Multiple heads let the model track different relationships at once. KV heads are the key/value-sharing side of grouped attention.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Layer</dt>
+          <dd>One repeated block of computation in the transformer. More layers mean more “thinking steps,” but also more parameters and time.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Loss</dt>
+          <dd>A training score the optimizer tries to minimize. For language models, it usually measures how wrong the predicted next-token probabilities were.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>MLX</dt>
+          <dd>Apple's machine learning framework used here for local Apple Silicon experiments.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Optimizer</dt>
+          <dd>The algorithm that updates the model's parameters after seeing the gradients.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Parameter</dt>
+          <dd>A learned number in the model. Think of parameters as the model's stored memory of the patterns it has discovered.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Post-quant BPB</dt>
+          <dd>The score after the model has been quantized and packed into the shipped artifact. This is often more important than pre-quant quality.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Pre-quant BPB</dt>
+          <dd>The score before final compression. Useful, but not the full story.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Proxy run</dt>
+          <dd>A cheap local experiment that imitates the real evaluation loop closely enough to screen ideas quickly.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>PyTorch</dt>
+          <dd>A popular deep learning framework. The main contest baseline trains in PyTorch on large GPUs.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Quantization</dt>
+          <dd>Storing weights in lower precision, such as int8 instead of float32, to save space. It can shrink the model but may hurt quality.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Quantization-aware training (QAT)</dt>
+          <dd>Training the model while simulating later quantization effects so it learns to survive the final compressed form better.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Quantization gap</dt>
+          <dd>The difference between pre-quant and post-quant quality. A smaller gap means the model survives compression better.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Recurrence / layer tying</dt>
+          <dd>Reusing the same weights across multiple layers or time steps so you get more effective depth without paying for all-new parameters.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Serialization</dt>
+          <dd>Turning the model into a saved byte representation on disk.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Token</dt>
+          <dd>A chunk of text the model operates on. It may be a word piece, subword, byte-level chunk, or something else depending on the tokenizer.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Tokenizer</dt>
+          <dd>The system that splits raw text into tokens before the model sees it.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Transformer</dt>
+          <dd>The core neural network architecture behind modern language models. It processes token sequences using attention and feed-forward layers.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Validation</dt>
+          <dd>Measuring the model on held-out data without updating its weights. This tells us how well it generalizes.</dd>
+        </dl>
+        <dl class="glossary-item">
+          <dt>Wall-clock cap</dt>
+          <dd>A hard time limit measured in actual elapsed time, not number of training steps.</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section id="walkthrough">
+      <h2>3. Step-by-step walkthrough of one actual run</h2>
+      <p class="section-intro">
+        This section walks from raw text all the way to a compressed artifact, using the same mental path we use when running experiments in this repo.
+      </p>
+
+      <div class="grid-2">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Start with text</h3>
+          <p>
+            The training dataset is just a large pile of text. The model does not directly understand characters or words as humans do. It only sees sequences of token IDs.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>Tokenize the text</h3>
+          <p>
+            A tokenizer converts text into compact IDs. Example: a sentence becomes a sequence such as <code>[412, 87, 901, 5, ...]</code>. This is the language model's input alphabet.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Form training examples</h3>
+          <p>
+            The model is shown a context window, such as 1024 tokens, and asked to predict the next token at each position. That creates many prediction tasks from the same text stream.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-number">4</div>
+          <h3>Embed tokens into vectors</h3>
+          <p>
+            Token IDs are looked up in an embedding table, producing vectors. This turns discrete symbols into continuous numeric representations the network can manipulate.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-number">5</div>
+          <h3>Run the transformer layers</h3>
+          <p>
+            Each layer mixes information across tokens and refines the internal representation. Attention helps each position decide which earlier positions matter for the next prediction.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-number">6</div>
+          <h3>Predict the next token</h3>
+          <p>
+            The final hidden state is projected into logits over the vocabulary. After converting logits to probabilities, the model says how likely each next token is.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-number">7</div>
+          <h3>Compute loss</h3>
+          <p>
+            The correct next token is known from the dataset. The loss measures how surprised the model was by the truth. Lower surprise means lower loss and usually lower BPB.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-number">8</div>
+          <h3>Backpropagate and update weights</h3>
+          <p>
+            Gradients are computed, then the optimizer nudges the weights. This is how the model slowly turns from random guesses into useful predictions.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-number">9</div>
+          <h3>Validate on held-out text</h3>
+          <p>
+            We periodically stop training updates and measure how well the model predicts unseen validation data. This gives us loss and BPB without contaminating the model with the answers.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-number">10</div>
+          <h3>Quantize and serialize</h3>
+          <p>
+            After training, the weights are compressed into a smaller saved form, such as int8 with scales. This is where quality can drop if the model is not quantization-friendly.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-number">11</div>
+          <h3>Run the exact roundtrip eval</h3>
+          <p>
+            The compressed artifact is loaded back in and evaluated again. This gives the true post-quant score of the shipped model, which is what matters most for the contest.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-number">12</div>
+          <h3>Compare against the baseline</h3>
+          <p>
+            We do not keep a change because it feels smart. We keep it only if it improves the measured result enough to be worth the added complexity.
+          </p>
+        </div>
+      </div>
+
+      <div class="diagram" style="margin-top: 20px;">
+        <svg viewBox="0 0 1200 360" role="img" aria-label="From raw text to artifact in a sequence of steps">
+          <rect x="0" y="0" width="1200" height="360" rx="24" fill="#0c1428" />
+          <g font-family="Inter, sans-serif">
+            <rect x="30" y="120" width="130" height="100" rx="16" fill="#162241" stroke="#2a355d" />
+            <text x="95" y="160" fill="#fff" font-size="22" text-anchor="middle" font-weight="700">Text</text>
+            <text x="95" y="188" fill="#a8b3d1" font-size="15" text-anchor="middle">raw corpus</text>
+
+            <rect x="190" y="120" width="130" height="100" rx="16" fill="#162241" stroke="#2a355d" />
+            <text x="255" y="160" fill="#fff" font-size="22" text-anchor="middle" font-weight="700">Tokens</text>
+            <text x="255" y="188" fill="#a8b3d1" font-size="15" text-anchor="middle">IDs</text>
+
+            <rect x="350" y="120" width="130" height="100" rx="16" fill="#162241" stroke="#2a355d" />
+            <text x="415" y="160" fill="#fff" font-size="22" text-anchor="middle" font-weight="700">Model</text>
+            <text x="415" y="188" fill="#a8b3d1" font-size="15" text-anchor="middle">transformer</text>
+
+            <rect x="510" y="120" width="130" height="100" rx="16" fill="#162241" stroke="#2a355d" />
+            <text x="575" y="160" fill="#fff" font-size="22" text-anchor="middle" font-weight="700">Loss</text>
+            <text x="575" y="188" fill="#a8b3d1" font-size="15" text-anchor="middle">how wrong?</text>
+
+            <rect x="670" y="120" width="130" height="100" rx="16" fill="#162241" stroke="#2a355d" />
+            <text x="735" y="160" fill="#fff" font-size="22" text-anchor="middle" font-weight="700">Update</text>
+            <text x="735" y="188" fill="#a8b3d1" font-size="15" text-anchor="middle">optimizer step</text>
+
+            <rect x="830" y="120" width="130" height="100" rx="16" fill="#162241" stroke="#2a355d" />
+            <text x="895" y="160" fill="#fff" font-size="22" text-anchor="middle" font-weight="700">Quantize</text>
+            <text x="895" y="188" fill="#a8b3d1" font-size="15" text-anchor="middle">pack small</text>
+
+            <rect x="990" y="120" width="180" height="100" rx="16" fill="#162241" stroke="#2a355d" />
+            <text x="1080" y="160" fill="#fff" font-size="22" text-anchor="middle" font-weight="700">Artifact Score</text>
+            <text x="1080" y="188" fill="#a8b3d1" font-size="15" text-anchor="middle">final post-quant BPB</text>
+
+            <g stroke="#7dd3fc" stroke-width="7" stroke-linecap="round">
+              <path d="M160 170 H190" />
+              <path d="M320 170 H350" />
+              <path d="M480 170 H510" />
+              <path d="M640 170 H670" />
+              <path d="M800 170 H830" />
+              <path d="M960 170 H990" />
+            </g>
+
+            <path d="M735 230 C735 290 415 290 415 230" fill="none" stroke="#c084fc" stroke-width="6" stroke-linecap="round" />
+            <text x="575" y="320" fill="#c084fc" font-size="16" text-anchor="middle">repeat thousands of times during training</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="callout" style="margin-top: 20px;">
+        <span class="pill">Why our current experiments focus on quantization</span>
+        <p>
+          A model can have a strong <em>pre-quant</em> score and still lose points once it is compressed. That makes quantization robustness a high-leverage first target: if we can reduce the damage caused by packing the weights, we improve the score that actually ships.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <h2>What we are doing in this repo right now</h2>
+      <p class="section-intro">
+        We are not jumping blindly into leaderboard runs. We are building and using a local screening loop to test ideas cheaply before moving them to more expensive hardware.
+      </p>
+
+      <table class="compare">
+        <thead>
+          <tr>
+            <th>Stage</th>
+            <th>What it does</th>
+            <th>Why it matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Local proxy harness</td>
+            <td>Runs short, repeatable MLX experiments on the Mac mini.</td>
+            <td>Lets us reject bad ideas quickly and cheaply.</td>
+          </tr>
+          <tr>
+            <td>Baseline runs</td>
+            <td>Measure the current model without modifications.</td>
+            <td>Provides a control for comparison.</td>
+          </tr>
+          <tr>
+            <td>Quantization-focused mutations</td>
+            <td>Changes training or serialization to reduce post-quant damage.</td>
+            <td>Targets the final shipped score directly.</td>
+          </tr>
+          <tr>
+            <td>Promotion to cloud later</td>
+            <td>Move the winners to the true contest setup.</td>
+            <td>Local wins are promising signals, not final proof.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="how-to-teach">
+      <h2>4. How to teach this to someone else</h2>
+      <p class="section-intro">
+        The Feynman method says: if you really understand something, you can explain it simply. Here is a script you can use almost word for word.
+      </p>
+
+      <div class="summary-box">
+        <span class="pill">A teachable version</span>
+        <p class="teach">
+          Parameter golf is a contest where you try to make a very small language model unusually good at predicting and compressing text.
+          The rules limit both the final file size and the training time, so you cannot just make the model bigger.
+          Instead, you look for smarter tradeoffs: better use of parameters, better compression, and better training efficiency.
+          A big part of the challenge is that the final model has to be packed into a tiny artifact, which can hurt quality.
+          So one of the smartest things to optimize is not just how good the model is before compression, but how well it survives compression.
+        </p>
+      </div>
+
+      <div class="grid-2" style="margin-top: 18px;">
+        <div class="faq">
+          <h3>If someone asks: “Why is BPB the score?”</h3>
+          <p>
+            Say: “Because predicting text well and compressing text well are closely related. If the model is less surprised by the text, it needs fewer bits to describe it.”
+          </p>
+        </div>
+        <div class="faq">
+          <h3>If someone asks: “Why not just use more parameters?”</h3>
+          <p>
+            Say: “The contest caps the artifact size. More parameters only help if you can fit and train them efficiently.”
+          </p>
+        </div>
+        <div class="faq">
+          <h3>If someone asks: “Why are you testing on a Mac mini?”</h3>
+          <p>
+            Say: “Because local runs are cheap and fast enough to screen ideas. We only want to spend expensive cloud time on the ideas that already look promising.”
+          </p>
+        </div>
+        <div class="faq">
+          <h3>If someone asks: “What are you optimizing first?”</h3>
+          <p>
+            Say: “The final post-quant score, because the compressed artifact is what actually gets judged.”
+          </p>
+        </div>
+      </div>
+
+      <details>
+        <summary>Common beginner confusion: “Is lower BPB really better?”</summary>
+        <p>
+          Yes. BPB is like “how many bits does the model need on average to explain the text?” Fewer bits means better predictions and therefore better compression.
+        </p>
+      </details>
+      <details>
+        <summary>Common beginner confusion: “If the local score is worse than the leaderboard score, are we failing?”</summary>
+        <p>
+          No. Local proxy runs are for direction-finding, not final ranking. They are a wind tunnel, not the race itself.
+        </p>
+      </details>
+      <details>
+        <summary>Common beginner confusion: “Why measure both pre-quant and post-quant?”</summary>
+        <p>
+          Because a model can look good before compression and then degrade after packing. The contest cares about the shipped artifact, so post-quant quality matters most.
+        </p>
+      </details>
+    </section>
+
+    <section>
+      <h2>A compact mental checklist</h2>
+      <div class="grid-4">
+        <div class="card">
+          <span class="pill">Ask 1</span>
+          <h3>Did the model learn?</h3>
+          <p>Look at training and validation quality.</p>
+        </div>
+        <div class="card">
+          <span class="pill">Ask 2</span>
+          <h3>Did it survive compression?</h3>
+          <p>Compare pre-quant and post-quant BPB.</p>
+        </div>
+        <div class="card">
+          <span class="pill">Ask 3</span>
+          <h3>Did it fit the cap?</h3>
+          <p>Check artifact bytes, not vibes.</p>
+        </div>
+        <div class="card">
+          <span class="pill">Ask 4</span>
+          <h3>Was it worth it?</h3>
+          <p>Keep only changes that improve the shipped score enough.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>One last simple summary</h2>
+      <div class="summary-box">
+        <p class="teach">
+          We are trying to build a tiny language model that stays smart even after being squeezed into a small package. To do that, we first built a fast local test loop, then we measure not just how well the model learns, but how well it survives compression. That is the heart of parameter golf.
+        </p>
+      </div>
+    </section>
+
+    <p class="footer-note">
+      Added as a standalone explainer for the parameter-golf fork. Open this file in a browser to use it as a teaching note, study guide, or orientation document for future experiments.
+    </p>
+  </div>
+</body>
+</html>
